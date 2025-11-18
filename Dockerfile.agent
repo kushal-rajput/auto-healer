@@ -1,0 +1,40 @@
+# Dockerfile for Root Agent (ADK Orchestrator)
+# BNB Marathon - Multi-agent orchestration with Gemini AI
+
+FROM python:3.12-slim
+
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    gcc \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy requirements
+COPY pyproject.toml .
+
+# Install uv and dependencies
+RUN pip install --no-cache-dir uv && \
+    uv pip install --system \
+    google-genai \
+    fastapi \
+    uvicorn[standard] \
+    google-cloud-aiplatform \
+    httpx \
+    pydantic
+
+# Copy application code
+COPY root_agent.py .
+
+# Set environment variables
+ENV PORT=8080
+ENV PYTHONUNBUFFERED=1
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:${PORT}/health || exit 1
+
+# Run the agent via uvicorn
+CMD uvicorn root_agent:app --host 0.0.0.0 --port ${PORT} --log-level info
+

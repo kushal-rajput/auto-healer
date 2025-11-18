@@ -1,0 +1,121 @@
+flowchart LR
+  %% Title banner
+  subgraph TITLE[ ]
+    direction LR
+    TITLETXT["Auto-Healer — High Level Design (Detect ▶ Predict ▶ Heal)"]
+  end
+
+  %% External triggers (top-left)
+  subgraph TRIG["Entry Points"]
+    direction TB
+    ALERT["SRE Alert / Manual cURL"]
+    SCHED["Cloud Scheduler<br/>(cron)"]
+    PUBSUB["Pub/Sub Event"]
+  end
+
+  %% Root agent orchestrator
+  subgraph ROOT["Root Agent (Cloud Run, Python 3.12)"]
+    direction TB
+    ROOT_API["/heal API"]
+    DETECTOR["Detector Agent"]
+    PREDICTOR["Predictor Agent"]
+    HEALER["Healer Agent"]
+    ROOT_API --> DETECTOR --> PREDICTOR --> HEALER
+  end
+
+  %% MCP tools
+  subgraph MCP["MCP Tools Server (FastAPI + FastMCP)"]
+    direction TB
+    GET_METRICS["get_metrics()"]
+    DETECT_ANOM["detect_anomaly()"]
+    PRED_RISK["predict_risk()"]
+    SCALE["scale_service()"]
+    RESTART["restart_service()"]
+    VERIFY["verify_health()"]
+    INGEST["ingest_metrics()"]
+    GET_METRICS --> DETECT_ANOM --> PRED_RISK
+    HEALING[(Healing Actions)]:::hidden
+  end
+
+  %% Data plane
+  subgraph DATA["Data Plane"]
+    direction TB
+    BIGQUERY["BigQuery<br/>Partitioned metrics table"]
+    LOGS["Cloud Logging<br/>Trace + metrics"]
+  end
+
+  %% AI reasoning
+  subgraph AI["AI Reasoning"]
+    direction TB
+    GEM["Vertex AI Gemini 1.5 Pro<br/>Risk scoring + recommendations"]
+  end
+
+  %% Microservices surface
+  subgraph SERVICES["Target Microservices (Cloud Run, Java 17)"]
+    direction TB
+    USER_API["user-api service"]
+    HEALTH["/health + metrics exporter"]
+  end
+
+  %% Observability + stakeholders
+  subgraph FEEDBACK["Closure & Feedback"]
+    direction TB
+    OUTPUT["JSON Runbook Output<br/>{violations, risk, action, verification}"]
+    DASH["Console / Dashboards"]
+  end
+
+  %% Flows
+  ALERT --> ROOT_API
+  SCHED --> ROOT_API
+  PUBSUB --> ROOT_API
+
+  USER_API --> HEALTH --> BIGQUERY
+  INGEST --> BIGQUERY
+
+  DETECTOR --> GET_METRICS
+  GET_METRICS --> BIGQUERY
+  DETECT_ANOM --> BIGQUERY
+
+  PREDICTOR --> PRED_RISK
+  PRED_RISK --> GEM
+  GEM --> PRED_RISK
+
+  HEALER --> SCALE
+  HEALER --> RESTART
+  SCALE --> USER_API
+  RESTART --> USER_API
+
+  VERIFY --> USER_API
+  VERIFY --> LOGS
+  HEALER --> VERIFY
+
+  SCALE --> BIGQUERY
+  RESTART --> BIGQUERY
+
+  BIGQUERY --> DETECTOR
+  LOGS --> DETECTOR
+
+  ROOT_API --> OUTPUT
+  OUTPUT --> DASH
+  LOGS --> DASH
+
+  %% Styling
+  classDef title fill:#ffffff,stroke:#ffffff,color:#111,font-weight:bold;
+  classDef trigger fill:#f7f9ff,stroke:#b5c7f7;
+  classDef root fill:#e6f0ff,stroke:#8bb4ff;
+  classDef tools fill:#ecfdf3,stroke:#7fd18a;
+  classDef data fill:#fff6e6,stroke:#ffbe5c;
+  classDef ai fill:#f6edff,stroke:#d0a9ff;
+  classDef svc fill:#ffecef,stroke:#ff8fa3;
+  classDef feedback fill:#eef2ff,stroke:#b4c3ff;
+  classDef hidden stroke-width:0,fill-opacity:0,color:#111;
+
+  class TITLE title;
+  class TRIG trigger;
+  class ROOT root;
+  class MCP tools;
+  class DATA data;
+  class AI ai;
+  class SERVICES svc;
+  class FEEDBACK feedback;
+

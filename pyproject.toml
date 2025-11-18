@@ -1,0 +1,38 @@
+[project]
+name = "auto-healer"
+version = "1.0.0"
+description = "AI-Driven Microservices Auto-Healer for BNB Marathon"
+requires-python = ">=3.12"
+dependencies = [
+    "google-genai>=0.1.0",  # Google Agent Development Kit (ADK)
+    "google-cloud-aiplatform>=1.60.0",
+    "google-cloud-bigquery>=3.25.0",
+    "google-cloud-run>=0.10.0",
+    "fastmcp>=0.2.0",
+    "httpx>=0.27.0",
+    "scikit-learn>=1.5.0",
+    "numpy>=1.26.0",
+    "pandas>=2.2.0",
+    "python-dotenv>=1.0.0",
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.30.0",
+    "pydantic>=2.9.0"
+]
+
+[tool.uv]
+dev-dependencies = [
+    "pytest>=8.0.0",
+    "ruff>=0.4.0"
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+# Include all Python files at project root (standalone scripts)
+packages = []
+include = [
+    "*.py",
+]
+

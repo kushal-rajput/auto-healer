@@ -1,0 +1,6 @@
+com/google/bnb/mock/service/BigQueryWriter.class
+com/google/bnb/mock/service/MetricsSimulator$ServiceMetrics.class
+com/google/bnb/mock/MockMicroserviceApplication.class
+com/google/bnb/mock/controller/HealthController.class
+com/google/bnb/mock/model/HealthResponse.class
+com/google/bnb/mock/service/MetricsSimulator.class
